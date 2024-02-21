@@ -8,6 +8,7 @@ This project is to enter a raffle to win a cute dog NFT. The protocol should do 
 
 1. Call the `enterRaffle` function with the following parameters:
    1. `address[] participants`: A list of addresses that enter. You can use this to enter yourself multiple times, or yourself and a group of your friends.
+   2. // q How should I enter multiple times if address cannot be duplicated ?
 2. Duplicate addresses are not allowed
 3. Users are allowed to get a refund of their ticket & `value` if they call the `refund` function
 4. Every X seconds, the raffle will be able to draw a winner and be minted a random puppy
@@ -25,6 +26,8 @@ This project is to enter a raffle to win a cute dog NFT. The protocol should do 
   - [Compatibilities](#compatibilities)
 - [Roles](#roles)
 - [Known Issues](#known-issues)
+- [Notes](#notes)
+  - [Issues:](#issues)
 
 # Getting Started
 
@@ -92,3 +95,14 @@ Player - Participant of the raffle, has the power to enter the raffle with the `
 # Known Issues
 
 None
+
+
+# Notes
+
+- Has documentation
+- Has a test suite
+- nsloc 143
+
+## Issues:
+- Lower solidity version
+- Low coverage percentage

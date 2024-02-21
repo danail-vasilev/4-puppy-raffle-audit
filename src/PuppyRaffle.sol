@@ -19,7 +19,7 @@ contract PuppyRaffle is ERC721, Ownable {
     using Address for address payable;
 
     uint256 public immutable entranceFee;
-
+    // q These are storage variable - add s_
     address[] public players;
     uint256 public raffleDuration;
     uint256 public raffleStartTime;
@@ -76,12 +76,15 @@ contract PuppyRaffle is ERC721, Ownable {
     /// @notice they have to pay the entrance fee * the number of players
     /// @notice duplicate entrants are not allowed
     /// @param newPlayers the list of players to enter the raffle
+    // q why is this public ? shouldn't it be external
     function enterRaffle(address[] memory newPlayers) public payable {
         require(msg.value == entranceFee * newPlayers.length, "PuppyRaffle: Must send enough to enter raffle");
+        // q Is it ok to update storage and then revert ?
         for (uint256 i = 0; i < newPlayers.length; i++) {
             players.push(newPlayers[i]);
+            // q when are the players cleared ?
         }
-
+        // q why not create a map to check that ?
         // Check for duplicates
         for (uint256 i = 0; i < players.length - 1; i++) {
             for (uint256 j = i + 1; j < players.length; j++) {
@@ -93,11 +96,15 @@ contract PuppyRaffle is ERC721, Ownable {
 
     /// @param playerIndex the index of the player to refund. You can find it externally by calling `getActivePlayerIndex`
     /// @dev This function will allow there to be blank spots in the array
+    // q shouldn't that be external ?
     function refund(uint256 playerIndex) public {
         address playerAddress = players[playerIndex];
+        // q why do we use index since we require the sendeer ?
         require(playerAddress == msg.sender, "PuppyRaffle: Only the player can refund");
         require(playerAddress != address(0), "PuppyRaffle: Player already refunded, or is not active");
 
+        // q do we need to send the whole etnrace Fee ? shouldn't we keep the fee ?
+        // q shouldn't we use call instead of sendValue ?
         payable(msg.sender).sendValue(entranceFee);
 
         players[playerIndex] = address(0);
@@ -113,18 +120,24 @@ contract PuppyRaffle is ERC721, Ownable {
                 return i;
             }
         }
+        // q why zero - this is also a valid index ?
         return 0;
     }
 
     /// @notice this function will select a winner and mint a puppy
     /// @notice there must be at least 4 players, and the duration has occurred
     /// @notice the previous winner is stored in the previousWinner variable
+    // q this shouldn't happen - use ChainLink VRF random data generator
     /// @dev we use a hash of on-chain data to generate the random numbers
     /// @dev we reset the active players array after the winner is selected
     /// @dev we send 80% of the funds to the winner, the other 20% goes to the feeAddress
+    // q Why is this external and there are no access modifiers ?
+    // This should rather be called by a ChainLink automation ?
+    // q don't we need a reentrancy guard here ?
     function selectWinner() external {
         require(block.timestamp >= raffleStartTime + raffleDuration, "PuppyRaffle: Raffle not over");
         require(players.length >= 4, "PuppyRaffle: Need at least 4 players");
+        // q use CL VRF random generator instead
         uint256 winnerIndex =
             uint256(keccak256(abi.encodePacked(msg.sender, block.timestamp, block.difficulty))) % players.length;
         address winner = players[winnerIndex];
@@ -135,6 +148,7 @@ contract PuppyRaffle is ERC721, Ownable {
 
         uint256 tokenId = totalSupply();
 
+        // q Use CL RNG
         // We use a different RNG calculate from the winnerIndex to determine rarity
         uint256 rarity = uint256(keccak256(abi.encodePacked(msg.sender, block.difficulty))) % 100;
         if (rarity <= COMMON_RARITY) {
@@ -154,6 +168,8 @@ contract PuppyRaffle is ERC721, Ownable {
     }
 
     /// @notice this function will withdraw the fees to the feeAddress
+    // q only the owner must withdraw - add access modifier
+    // q wny balance must equal totalFees ? when it is different ?
     function withdrawFees() external {
         require(address(this).balance == uint256(totalFees), "PuppyRaffle: There are currently players active!");
         uint256 feesToWithdraw = totalFees;
